@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Billing System</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:     #F2EDE4;
+            --paper:  #FAF7F2;
+            --ink:    #141414;
+            --muted:  #8C8070;
+            --accent: #C8552A;
+            --border: 2.5px solid var(--ink);
+            --sh:     4px 4px 0 var(--ink);
+            --sh-sm:  3px 3px 0 var(--ink);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            font-family: 'DM Mono', monospace;
+            min-height: 100vh;
+            padding: 28px 20px 48px;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            max-width: 1100px;
+            margin: 0 auto 22px;
+            display: flex;
+            align-items: baseline;
+            gap: 18px;
+            border-bottom: var(--border);
+            padding-bottom: 16px;
+        }
+        .logo {
+            font-family: 'DM Serif Display', serif;
+            font-size: 48px;
+            color: var(--ink);
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+        .logo span { color: var(--accent); }
+        .tagline {
+            font-size: 10px;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        /* ── LAYOUT ── */
+        .layout {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 185px 1fr 278px;
+            border: var(--border);
+            box-shadow: var(--sh);
+            background: var(--paper);
+        }
+        .col { display: flex; flex-direction: column; }
+        .col + .col { border-left: var(--border); }
+        .col-head {
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            padding: 11px 14px;
+            border-bottom: var(--border);
+            color: var(--muted);
+            background: var(--paper);
+        }
+
+        /* ── CATEGORIES ── */
+        .cat-list { overflow-y: auto; flex: 1; }
+
+        .cat-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 16px;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--ink);
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(20,20,20,0.1);
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.12s;
+        }
+        .cat-btn:hover { background: rgba(20,20,20,0.04); }
+        .cat-btn.active {
+            background: var(--ink);
+            color: var(--paper);
+            border-bottom-color: transparent;
+        }
+
+        /* ── DISHES ── */
+        .dishes-grid {
+            padding: 14px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            overflow-y: auto;
+            max-height: 520px;
+            align-content: start;
+        }
+        .placeholder {
+            grid-column: span 2;
+            padding: 48px 20px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .dish-card {
+            border: var(--border);
+            background: var(--paper);
+            box-shadow: var(--sh-sm);
+            padding: 10px;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .dish-card:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
+        .dish-card.selected { background: var(--ink); }
+
+        .dish-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 7px;
+            margin-bottom: 8px;
+        }
+        .dish-cb {
+            width: 14px; height: 14px;
+            flex-shrink: 0;
+            margin-top: 2px;
+            cursor: pointer;
+            accent-color: var(--accent);
+        }
+        .dish-name {
+            flex: 1;
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1.4;
+            color: var(--ink);
+        }
+        .dish-card.selected .dish-name { color: var(--paper); }
+
+        .dish-price {
+            font-size: 10px;
+            color: var(--muted);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .dish-card.selected .dish-price { color: rgba(250,247,242,0.45); }
+
+        .dish-qty-row {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding-left: 21px;
+        }
+        .qty-label {
+            font-size: 9px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+        .dish-card.selected .qty-label { color: rgba(250,247,242,0.35); }
+
+        .dish-qty {
+            width: 46px; height: 24px;
+            font-family: 'DM Mono', monospace;
+            font-size: 12px; font-weight: 500;
+            text-align: center;
+            border: 1.5px solid var(--ink);
+            background: var(--bg);
+            color: var(--ink);
+            outline: none;
+        }
+        .dish-qty:disabled {
+            border-color: rgba(20,20,20,0.15);
+            background: transparent;
+            color: transparent;
+        }
+        .dish-card.selected .dish-qty {
+            background: var(--paper);
+            border-color: var(--paper);
+        }
+        .dish-qty.error { border-color: var(--accent); background: #fbeae5; }
+
+        /* ── RECEIPT ── */
+        .receipt-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 14px;
+            gap: 10px;
+        }
+
+        /* FIX 1: Totals box — prevent text overflow */
+        .totals {
+            display: flex;
+            flex-direction: column;
+            border: var(--border);
+        }
+        .t-row { display: flex; border-bottom: 1.5px solid var(--ink); }
+        .t-row:last-child { border-bottom: none; }
+        .t-lbl {
+            width: 72px; padding: 7px 10px;
+            font-size: 9px; font-weight: 500;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--muted);
+            border-right: 1.5px solid var(--ink);
+            flex-shrink: 0;
+        }
+        .t-val {
+            flex: 1;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px; font-weight: 500;
+            color: var(--ink);
+            padding: 0 8px;
+            min-height: 34px;
+            min-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            letter-spacing: -0.5px;
+        }
+        .t-row.grand .t-lbl { color: var(--ink); }
+        .t-row.grand .t-val { color: var(--accent); }
+
+        /* FIX 2: Receipt — no scroll, auto height, static display */
+        .receipt-wrap { flex: 1; }
+        .tape-edge {
+            height: 10px;
+            background: repeating-linear-gradient(90deg, var(--paper) 0 7px, var(--bg) 7px 14px);
+            border: var(--border);
+        }
+        .tape-edge.top { border-bottom: none; }
+        .tape-edge.bot { border-top: none; }
+        .receipt-ta {
+            display: block; width: 100%;
+            font-family: 'DM Mono', monospace;
+            font-size: 10px; line-height: 1.65;
+            border: var(--border); border-top: none; border-bottom: none;
+            background: var(--paper); color: var(--ink);
+            padding: 10px 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 260px;
+            overflow-y: auto;
+            height: auto;
+            margin: 0;
+        }
+
+        .alert {
+            display: none;
+            font-size: 10px; font-weight: 500; letter-spacing: 0.5px;
+            padding: 8px 10px;
+            border: 1.5px solid var(--accent);
+            color: var(--accent);
+            text-align: center; text-transform: uppercase;
+        }
+
+        .btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+        .btn {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px; font-weight: 500;
+            letter-spacing: 2px; text-transform: uppercase;
+            padding: 9px 4px;
+            border: var(--border); cursor: pointer;
+            box-shadow: var(--sh-sm);
+            transition: transform 0.1s, box-shadow 0.1s;
+            background: var(--paper); color: var(--ink);
+        }
+        .btn:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
+        .btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--ink); }
+        .btn-total, .btn-exit { background: var(--ink); color: var(--paper); }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(20,20,20,0.25); }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">Billing<span>.</span>System</div>
+    <div class="tagline">Food Order &amp; Billing</div>
+</div>
+
+<div class="layout">
+
+    <!-- CATEGORIES -->
+    <div class="col">
+        <div class="col-head">Categories</div>
+        <div class="cat-list" id="catGrid"></div>
+    </div>
+
+    <!-- DISHES -->
+    <div class="col">
+        <div class="col-head">Select Dish</div>
+        <div class="dishes-grid" id="dishesBody">
+            <div class="placeholder">Select a category to view dishes</div>
+        </div>
+    </div>
+
+    <!-- RECEIPT -->
+    <div class="col">
+        <div class="col-head">Bill Summary</div>
+        <div class="receipt-body">
+
+            <div class="totals">
+                <div class="t-row">
+                    <div class="t-lbl">Tax</div>
+                    <div class="t-val" id="jtxtTax">—</div>
+                </div>
+                <div class="t-row">
+                    <div class="t-lbl">Subtotal</div>
+                    <div class="t-val" id="jtxtSub">—</div>
+                </div>
+                <div class="t-row grand">
+                    <div class="t-lbl">Total</div>
+                    <div class="t-val" id="jtxtTotal">—</div>
+                </div>
+            </div>
+
+            <div class="alert" id="alertBox"></div>
+
+            <div class="receipt-wrap">
+                <div class="tape-edge top"></div>
+                <pre class="receipt-ta" id="jtxtReceipt">  Receipt will appear here.
+
+  1. Select dishes
+  2. Enter quantities
+  3. Press Total</pre>
+                <div class="tape-edge bot"></div>
+            </div>
+
+            <div class="btns">
+                <button class="btn btn-total" onclick="doTotal()">Total</button>
+                <button class="btn btn-reset" onclick="doReset()">Reset</button>
+                <button class="btn btn-exit"  onclick="doExit()">Exit</button>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<form id="orderForm" action="order" method="POST" style="display:none;"></form>
+
+<script>
+const selections = {};
+let activeCategory = null;
+
+window.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const res  = await fetch('menu');
+        const cats = await res.json();
+        renderCats(cats);
+        if (cats.length) loadCategory(cats[0]);
+    } catch(e) {
+        document.getElementById('catGrid').innerHTML =
+            '<div style="padding:16px;font-size:10px;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:1px;">Cannot load categories.<br>Check DB connection.</div>';
+    }
+});
+
+function renderCats(cats) {
+    const grid = document.getElementById('catGrid');
+    grid.innerHTML = '';
+    cats.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className   = 'cat-btn';
+        btn.dataset.cat = cat;
+        btn.textContent = cat;
+        btn.onclick     = () => loadCategory(cat);
+        grid.appendChild(btn);
+    });
+}
+
+async function loadCategory(cat) {
+    activeCategory = cat;
+    document.querySelectorAll('.cat-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.cat === cat));
+    document.getElementById('dishesBody').innerHTML =
+        '<div class="placeholder">Loading...</div>';
+    try {
+        const res   = await fetch('menu?cat=' + encodeURIComponent(cat));
+        const items = await res.json();
+        renderDishes(items);
+    } catch(e) {
+        document.getElementById('dishesBody').innerHTML =
+            '<div class="placeholder" style="color:var(--accent);">Error loading items.</div>';
+    }
+}
+
+function renderDishes(items) {
+    const body = document.getElementById('dishesBody');
+    body.innerHTML = '';
+    if (!items || !items.length) {
+        body.innerHTML = '<div class="placeholder">No items in this category.</div>';
+        return;
+    }
+    items.forEach(item => {
+        const saved   = selections[item.id];
+        const checked = !!saved;
+        const qtyVal  = saved ? saved.qty : '';
+        const sn      = item.name.replace(/'/g, "\\'");
+
+        const card = document.createElement('div');
+        card.className = 'dish-card' + (checked ? ' selected' : '');
+        card.id = 'card_' + item.id;
+        card.innerHTML = `
+            <div class="dish-top">
+                <input class="dish-cb" type="checkbox" id="ch_${item.id}" ${checked ? 'checked' : ''}
+                    onchange="toggleQty(this,${item.id},'${sn}',${item.price})">
+                <label class="dish-name" for="ch_${item.id}">${item.name}</label>
+                <span class="dish-price">Rs ${item.price}</span>
+            </div>
+            <div class="dish-qty-row">
+                <span class="qty-label">Qty</span>
+                <input class="dish-qty" type="text" id="qty_${item.id}"
+                    value="${checked ? qtyVal : ''}" ${checked ? '' : 'disabled'}
+                    onkeypress="numOnly(event)" onpaste="pasteOnly(event)"
+                    oninput="onQtyChange(${item.id},'${sn}',${item.price})">
+            </div>`;
+        body.appendChild(card);
+    });
+}
+
+function toggleQty(cb, id, name, price) {
+    const f = document.getElementById('qty_' + id);
+    const c = document.getElementById('card_' + id);
+    if (cb.checked) {
+        f.disabled = false; f.value = ''; f.classList.remove('error');
+        c.classList.add('selected');
+        selections[id] = { name, price, qty: '' };
+        f.focus();
+    } else {
+        f.disabled = true; f.value = ''; f.classList.remove('error');
+        c.classList.remove('selected');
+        delete selections[id];
+    }
+}
+
+function onQtyChange(id, name, price) {
+    const f = document.getElementById('qty_' + id);
+    const v = f.value.trim();
+    selections[id] = { name, price, qty: v === '' ? '' : parseInt(v) };
+    if (v && parseInt(v) > 0) f.classList.remove('error');
+}
+
+function pasteOnly(e) {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text');
+    if (/^[1-9][0-9]*$/.test(text.trim())) {
+        document.execCommand('insertText', false, text.trim());
+    }
+}
+
+function numOnly(e) {
+    if (!/^\d$/.test(e.key)) e.preventDefault();
+}
+
+function syncVisible() {
+    document.querySelectorAll('.dish-qty:not(:disabled)').forEach(f => {
+        const id = f.id.replace('qty_', '');
+        if (selections[id]) {
+            const v = f.value.trim();
+            selections[id].qty = v === '' ? '' : parseInt(v);
+        }
+    });
+}
+
+function doTotal() {
+    syncVisible();
+    const al = document.getElementById('alertBox');
+    al.style.display = 'none';
+
+    if (!Object.keys(selections).length) {
+        al.textContent = 'Please select at least one dish.';
+        al.style.display = 'block'; return;
+    }
+
+    let valid = true;
+    for (const [id, s] of Object.entries(selections)) {
+        const q = parseInt(s.qty);
+        if (isNaN(q) || q <= 0) {
+            valid = false;
+            const f = document.getElementById('qty_' + id);
+            if (f) f.classList.add('error');
+        }
+    }
+    if (!valid) {
+        al.textContent = 'Enter a valid quantity (min 1) for each selected item.';
+        al.style.display = 'block'; return;
+    }
+
+    let sub = 0;
+    const lines = [];
+    for (const [, s] of Object.entries(selections)) {
+        const q = parseInt(s.qty), cost = q * s.price;
+        sub += cost;
+        const name = s.name.length > 14 ? s.name.slice(0, 13) + '.' : s.name;
+        const amount = 'Rs ' + cost.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        lines.push(`  ${name.padEnd(15)} x${String(q).padStart(2)}  ${amount}`);
+    }
+
+    const tax   = sub * 0.1;
+    const total = sub + tax;
+    const fmt   = v => 'Rs ' + v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    document.getElementById('jtxtTax').textContent   = fmt(tax);
+    document.getElementById('jtxtSub').textContent   = fmt(sub);
+    document.getElementById('jtxtTotal').textContent = fmt(total);
+
+    const ref = 'ORD-' + (1000 + Math.floor(Math.random() * 9000));
+    const now = new Date();
+    const ds  = now.toLocaleDateString('en-IN') + '  ' +
+                now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    const hr  = '  ' + '-'.repeat(28);
+
+    document.getElementById('jtxtReceipt').textContent = [
+        '  FOOD ORDER SYSTEM',
+        hr,
+        '  Ref  : ' + ref,
+        '  Date : ' + ds,
+        hr,
+        '',
+        ...lines,
+        '',
+        hr,
+        '  Subtotal :      ' + fmt(sub).padStart(10),
+        '  Tax (10%):      ' + fmt(tax).padStart(10),
+        hr,
+        '  Total    :      ' + fmt(total).padStart(10),
+        hr,
+        '',
+        '  Thank you for your order!'
+    ].join('\n');
+
+    buildForm();
+}
+
+function buildForm() {
+    const form = document.getElementById('orderForm');
+    form.innerHTML = '';
+    for (const [id, s] of Object.entries(selections)) {
+        const q = parseInt(s.qty);
+        if (q > 0) {
+            const inp = document.createElement('input');
+            inp.type = 'hidden'; inp.name = 'item_' + id; inp.value = q;
+            form.appendChild(inp);
+        }
+    }
+}
+
+function doReset() {
+    for (const k in selections) delete selections[k];
+    ['jtxtTax', 'jtxtSub', 'jtxtTotal'].forEach(id =>
+        document.getElementById(id).textContent = '—');
+    document.getElementById('jtxtReceipt').textContent = '  Receipt will appear here.\n\n  1. Select dishes\n  2. Enter quantities\n  3. Press Total';
+    document.getElementById('alertBox').style.display = 'none';
+    if (activeCategory) loadCategory(activeCategory);
+}
+
+function doExit() {
+    if (confirm('Are you sure you want to exit?')) {
+        document.body.innerHTML = `
+            <div style="
+                background: #F2EDE4;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 16px;
+                font-family: 'DM Mono', monospace;
+            ">
+                <div style="font-family: 'DM Serif Display', serif; font-size: 56px; color: #141414; letter-spacing: -1px;">
+                    Thank<span style="color:#C8552A;">.</span>You
+                </div>
+                <div style="font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #8C8070;">
+                    Your session has ended
+                </div>
+                <div style="margin-top: 24px; border-top: 2.5px solid #141414; padding-top: 20px; text-align: center;">
+                    <button onclick="window.location.reload()" style="
+                        font-family: 'DM Mono', monospace;
+                        font-size: 10px; font-weight: 500;
+                        letter-spacing: 2px; text-transform: uppercase;
+                        padding: 10px 24px;
+                        border: 2.5px solid #141414;
+                        background: #141414; color: #FAF7F2;
+                        cursor: pointer;
+                        box-shadow: 4px 4px 0 #141414;
+                    ">New Order</button>
+                </div>
+            </div>`;
+    }
+}
+</script>
+</body>
+</html>
